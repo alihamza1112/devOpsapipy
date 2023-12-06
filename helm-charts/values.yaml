@@ -1,0 +1,10 @@
+# values.yaml
+replicaCount: 1
+image:
+  repository: my-app
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  name: my-app
+  type: ClusterIP
+  port: 5000
