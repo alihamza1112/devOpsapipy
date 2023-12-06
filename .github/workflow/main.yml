@@ -1,0 +1,70 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+
+    - name: Install dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+
+    - name: Run tests
+      run: |
+        python app.py &  # Start the application in the background
+        sleep 5  # Wait for the application to start
+        curl localhost:5000/books  # Test the endpoint
+        pkill -f "python app.py"  # Stop the application
+
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up semgrep
+      uses: returntocorp/semgrep-action@v2
+
+    # Add other static analysis steps as needed
+
+  build-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build Docker image
+      run: docker buildx create --use && docker buildx build -t <YOUR_DOCKERHUB_USERNAME>/your-app-name:latest .
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    needs: [build-docker]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f kubernetes-manifests/  # Replace with your actual path
